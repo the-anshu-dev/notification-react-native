@@ -1,118 +1,185 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- */
+// // import React from 'react';
+// // import { SafeAreaView } from 'react-native';
+// // import NotificationExample from './src/componenets/NotificationExample';
 
-import React from 'react';
-import type {PropsWithChildren} from 'react';
-import {
-  SafeAreaView,
-  ScrollView,
-  StatusBar,
-  StyleSheet,
-  Text,
-  useColorScheme,
-  View,
-} from 'react-native';
+// // const App = () => {
+// //     return (
+// //         <SafeAreaView>
+// //             <NotificationExample />
+// //         </SafeAreaView>
+// //     );
+// // };
 
-import {
-  Colors,
-  DebugInstructions,
-  Header,
-  LearnMoreLinks,
-  ReloadInstructions,
-} from 'react-native/Libraries/NewAppScreen';
+// // export default App;
+// import * as React from 'react';
+// import { NavigationContainer } from '@react-navigation/native';
+// import { createNativeStackNavigator } from '@react-navigation/native-stack';
+// import NotificationExample from './src/screens/NotificationExample';
+// import NotificationDetail from './src/screens/NotificationDetail';
+// import messaging from '@react-native-firebase/messaging';
+// import database from '@react-native-firebase/database';
+// import { AuthProvider, useAuth } from './src/context/AuthContext';
+// const Stack = createNativeStackNavigator();
 
-type SectionProps = PropsWithChildren<{
-  title: string;
-}>;
+// function App() {
 
-function Section({children, title}: SectionProps): React.JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
+//   const {setDeviceToken}=useAuth()
+//   React.useEffect(() => {
+//     const requestUserPermission = async () => {
+//       const authStatus = await messaging().requestPermission();
+//       const enabled =
+//         authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
+//         authStatus === messaging.AuthorizationStatus.PROVISIONAL;
+
+//       if (enabled) {
+//         console.log('Authorization status:', authStatus);
+//         getDeviceToken();
+//       }
+//     };
+
+//     // const getDeviceToken = async () => {
+//     //   const token = await messaging().getToken();
+//     //   console.log('Device Token:', token);
+//     //   const newId = Date.now(); 
+
+//     //   // Save token to Firebase
+//     //   if (token) {
+//     //     // await database().ref(`/tokens/${token}`).set({ token });
+//     //     await database().ref(`/tokens/${newId}`).set({ id: newId, token });
+//     //     console.log("Device token Registered Successfully ");
+
+//     //   }
+//     // };
+
+
+
+
+
+//     const getDeviceToken = async () => {
+//       const token = await messaging().getToken();
+//       console.log('Device Token:', token);
+
+//       if (token) {
+//         try {
+//           // Check if the token already exists
+//           const snapshot = await database().ref('/tokens').orderByChild('token').equalTo(token).once('value');
+
+//           if (snapshot.exists()) {
+//             console.log("Device token already registered.");
+//             return; // Exit if the token already exists
+//           }
+
+//           // If the token does not exist, save it to Firebase
+//           const newId = Date.now();
+//           await database().ref(`/tokens/${newId}`).set({ id: newId, token });
+//           console.log("Device token registered successfully.");
+//         } catch (error) {
+//           console.error("Error registering device token:", error);
+//         }
+//       }
+//     };
+
+
+//     requestUserPermission();
+//   }, []);
+
+
+//   return (
+//     <AuthProvider>
+//       <NavigationContainer>
+//         <Stack.Navigator>
+//           <Stack.Screen name="Home" component={NotificationExample} />
+//           <Stack.Screen name="NotificationDetail" component={NotificationDetail} />
+//         </Stack.Navigator>
+//       </NavigationContainer>
+//     </AuthProvider>
+//   );
+// }
+
+// export default App;
+
+
+
+
+
+
+
+
+
+
+
+
+import * as React from 'react';
+import { NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import NotificationExample from './src/screens/NotificationExample';
+import NotificationDetail from './src/screens/NotificationDetail';
+import messaging from '@react-native-firebase/messaging';
+import database from '@react-native-firebase/database';
+import { AuthProvider, useAuth } from './src/context/AuthContext';
+
+const Stack = createNativeStackNavigator();
+
+const App = () => {
   return (
-    <View style={styles.sectionContainer}>
-      <Text
-        style={[
-          styles.sectionTitle,
-          {
-            color: isDarkMode ? Colors.white : Colors.black,
-          },
-        ]}>
-        {title}
-      </Text>
-      <Text
-        style={[
-          styles.sectionDescription,
-          {
-            color: isDarkMode ? Colors.light : Colors.dark,
-          },
-        ]}>
-        {children}
-      </Text>
-    </View>
+    <AuthProvider>
+      <MainNavigator />
+    </AuthProvider>
   );
-}
+};
 
-function App(): React.JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
+const MainNavigator = () => {
+  const { setDeviceToken }:any = useAuth();
 
-  const backgroundStyle = {
-    backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
-  };
+  React.useEffect(() => {
+    const requestUserPermission = async () => {
+      const authStatus = await messaging().requestPermission();
+      const enabled =
+        authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
+        authStatus === messaging.AuthorizationStatus.PROVISIONAL;
+
+      if (enabled) {
+        console.log('Authorization status:', authStatus);
+        getDeviceToken(); // Moved this call here
+      }
+    };
+
+    const getDeviceToken = async () => {
+      const token = await messaging().getToken();
+      setDeviceToken(token);
+      console.log('Device Token:', token);
+
+      if (token) {
+        try {
+          // Check if the token already exists
+          const snapshot = await database().ref('/tokens').orderByChild('token').equalTo(token).once('value');
+
+          if (snapshot.exists()) {
+            console.log("Device token already registered.");
+            return; // Exit if the token already exists
+          }
+
+          // If the token does not exist, save it to Firebase
+          const newId = Date.now();
+          await database().ref(`/tokens/${newId}`).set({ id: newId, token });
+          console.log("Device token registered successfully.");
+        } catch (error) {
+          console.error("Error registering device token:", error);
+        }
+      }
+    };
+
+    requestUserPermission();
+  }, [setDeviceToken]); // Add setDeviceToken as a dependency
 
   return (
-    <SafeAreaView style={backgroundStyle}>
-      <StatusBar
-        barStyle={isDarkMode ? 'light-content' : 'dark-content'}
-        backgroundColor={backgroundStyle.backgroundColor}
-      />
-      <ScrollView
-        contentInsetAdjustmentBehavior="automatic"
-        style={backgroundStyle}>
-        <Header />
-        <View
-          style={{
-            backgroundColor: isDarkMode ? Colors.black : Colors.white,
-          }}>
-          <Section title="Step One">
-            Edit <Text style={styles.highlight}>App.tsx</Text> to change this
-            screen and then come back to see your edits.
-          </Section>
-          <Section title="See Your Changes">
-            <ReloadInstructions />
-          </Section>
-          <Section title="Debug">
-            <DebugInstructions />
-          </Section>
-          <Section title="Learn More">
-            Read the docs to discover what to do next:
-          </Section>
-          <LearnMoreLinks />
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+    <NavigationContainer>
+      <Stack.Navigator>
+        <Stack.Screen name="Home" component={NotificationExample} />
+        <Stack.Screen name="NotificationDetail" component={NotificationDetail} />
+      </Stack.Navigator>
+    </NavigationContainer>
   );
-}
-
-const styles = StyleSheet.create({
-  sectionContainer: {
-    marginTop: 32,
-    paddingHorizontal: 24,
-  },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: '600',
-  },
-  sectionDescription: {
-    marginTop: 8,
-    fontSize: 18,
-    fontWeight: '400',
-  },
-  highlight: {
-    fontWeight: '700',
-  },
-});
+};
 
 export default App;
